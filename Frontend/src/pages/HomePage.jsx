@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import '../Style/HomePageStyle.css';
-import '../Style/AnimationStyle.css';
+import React, { useState } from "react";
+import "../Style/HomePageStyle.css";
+import "../Style/AnimationStyle.css";
 
-// =================================================================
-// 1. SUCCESS ANIMATION COMPONENT
-//    (Displays a tick mark upon successful submission)
-// =================================================================
+// ===============================
+// SUCCESS ANIMATION COMPONENT
+// ===============================
 
 const SuccessAnimation = () => (
   <div className="success-overlay">
@@ -21,126 +20,155 @@ const SuccessAnimation = () => (
   </div>
 );
 
-// =================================================================
-// 3. MAIN PAGE COMPONENT (Now includes success animation logic)
-// =================================================================
+// ===============================
+// STATIC TABLE DATA (TEMP)
+// ===============================
 
 const statusColors = {
-  Pending: { background: '#fffbe0', color: '#8a6500', border: '#fbe98a' },
-  Approved: { background: '#e0fff1', color: '#00654e', border: '#8afbe9' },
-  Live: { background: '#e0f1ff', color: '#004a8a', border: '#8ae9fb' },
+  Pending: { background: "#fffbe0", color: "#8a6500", border: "#fbe98a" },
+  Approved: { background: "#e0fff1", color: "#00654e", border: "#8afbe9" },
+  Live: { background: "#e0f1ff", color: "#004a8a", border: "#8ae9fb" },
 };
 
 const IPOApplications = [
-  { company: 'Acme Corp', status: 'Pending', date: '2023-08-15' },
-  { company: 'Beta Industries', status: 'Approved', date: '2023-07-20' },
-  { company: 'Gamma Solutions', status: 'Live', date: '2023-06-05' },
+  { company: "Acme Corp", status: "Pending", date: "2023-08-15" },
+  { company: "Beta Industries", status: "Approved", date: "2023-07-20" },
+  { company: "Gamma Solutions", status: "Live", date: "2023-06-05" },
 ];
 
-const MainPage = ({ onLogout }) => {
+// ===============================
+// MAIN HOME PAGE
+// ===============================
+
+const HomePage = () => {
+
   const [formData, setFormData] = useState({
-    companyName: '',
-    companySymbol: '',
-    issueSize: '',
-    pricePerShare: '',
-    totalShares: '',
+    companyName: "",
+    companySymbol: "",
+    issueSize: "",
+    pricePerShare: "",
+    totalShares: "",
     document: null,
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false); // NEW STATE FOR ANIMATION
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+
+  // INPUT CHANGE HANDLER
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Simple calculated field logic (Total Shares)
-    if (name === 'issueSize' || name === 'pricePerShare') {
-        const size = parseFloat(name === 'issueSize' ? value : formData.issueSize) || 0;
-        const price = parseFloat(name === 'pricePerShare' ? value : formData.pricePerShare) || 0;
-        const calculatedShares = price > 0 ? (size / price).toFixed(0) : '0';
-        setFormData(prev => ({ ...prev, totalShares: calculatedShares }));
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Auto calculate total shares
+    if (name === "issueSize" || name === "pricePerShare") {
+      const size =
+        parseFloat(name === "issueSize" ? value : formData.issueSize) || 0;
+      const price =
+        parseFloat(name === "pricePerShare" ? value : formData.pricePerShare) ||
+        0;
+
+      const shares = price > 0 ? (size / price).toFixed(0) : "0";
+
+      setFormData((prev) => ({ ...prev, totalShares: shares }));
     }
   };
 
+  // FILE UPLOAD
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setFormData(prev => ({ ...prev, document: file }));
+    setFormData((prev) => ({ ...prev, document: file }));
   };
 
+  // FORM SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setIsSubmitting(true);
-    setMessage('');
-    
-    // Placeholder for SQL Backend Submission
+    setMessage("");
+
     try {
-        console.log('Submitting IPO Application:', formData);
-        
-        // Simulating API call and database insertion delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("IPO Form Submitted:", formData);
 
-        // 1. Show the animated success checkmark
-        setShowSuccessAnimation(true);
-        
-        // 2. Hide the animation and show the static message after 2 seconds
-        setTimeout(() => {
-            setShowSuccessAnimation(false);
-            setMessage('Application submitted successfully!');
-        }, 2000); 
+      // Simulate backend API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        // Clear form
-        setFormData({ companyName: '', companySymbol: '', issueSize: '', pricePerShare: '', totalShares: '', document: null });
-        document.getElementById('file-upload-input').value = '';
-        
+      setShowSuccessAnimation(true);
+
+      setTimeout(() => {
+        setShowSuccessAnimation(false);
+        setMessage("Application submitted successfully!");
+      }, 1800);
+
+      // Reset form
+      setFormData({
+        companyName: "",
+        companySymbol: "",
+        issueSize: "",
+        pricePerShare: "",
+        totalShares: "",
+        document: null,
+      });
+
+      document.getElementById("file-upload-input").value = "";
+
     } catch (error) {
-        console.error('Submission failed:', error);
-        setMessage('Submission failed. Please try again.');
+      console.error(error);
+      setMessage("Submission failed. Try again.");
     } finally {
-        // We set isSubmitting to false outside the setTimeout to re-enable the button immediately
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
+  };
+
+  // LOGOUT HANDLER
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/";
   };
 
   return (
     <div className="main-app-container">
-      {/* RENDER THE ANIMATION OVERLAY IF STATE IS TRUE */}
+
       {showSuccessAnimation && <SuccessAnimation />}
-      
+
+      {/* HEADER */}
       <header className="header">
+
         <div className="logo-section">
-          <svg className="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-            <polyline points="17 6 23 6 23 12"></polyline>
-          </svg>
           <span className="app-title">IPO Tracker</span>
         </div>
-        <button className="btn-logout" onClick={onLogout}>Logout</button>
+
+        <button className="btn-logout" onClick={handleLogout}>
+          Logout
+        </button>
+
       </header>
 
+      {/* MAIN CONTENT */}
       <main className="main-content-area">
-        
-        {/* Left Panel: IPO Submission Form */}
+
+        {/* LEFT FORM PANEL */}
         <section className="form-card">
-          <h2 className="section-title">Apply for a New IPO</h2>
-          
+
+          <h2 className="section-title">Apply for New IPO</h2>
+
           <form onSubmit={handleSubmit} className="ipo-form">
-            
-            <label className="input-label">Company Name</label>
-            <input 
-              type="text" 
+
+            <input
+              type="text"
               name="companyName"
-              placeholder="e.g., Innovate Inc." 
-              className="input-field" 
+              placeholder="Company Name"
+              className="input-field"
               value={formData.companyName}
               onChange={handleInputChange}
               required
             />
-            
-            <label className="input-label">Company Symbol</label>
-            <input 
-              type="text" 
+
+            <input
+              type="text"
               name="companySymbol"
-              placeholder="e.g., INVT" 
+              placeholder="Company Symbol"
               className="input-field"
               value={formData.companySymbol}
               onChange={handleInputChange}
@@ -148,156 +176,240 @@ const MainPage = ({ onLogout }) => {
             />
 
             <div className="input-group-row">
-              <div className="input-group-col">
-                <label className="input-label">Issue Size ($)</label>
-                <input 
-                  type="number" 
-                  name="issueSize"
-                  placeholder="1000000" 
-                  className="input-field"
-                  value={formData.issueSize}
-                  onChange={handleInputChange}
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div className="input-group-col">
-                <label className="input-label">Price per Share ($)</label>
-                <input 
-                  type="number" 
-                  name="pricePerShare"
-                  placeholder="25.50" 
-                  className="input-field"
-                  value={formData.pricePerShare}
-                  onChange={handleInputChange}
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
+
+              <input
+                type="number"
+                name="issueSize"
+                placeholder="Issue Size ($)"
+                className="input-field"
+                value={formData.issueSize}
+                onChange={handleInputChange}
+                required
+              />
+
+              <input
+                type="number"
+                name="pricePerShare"
+                placeholder="Price per Share ($)"
+                className="input-field"
+                value={formData.pricePerShare}
+                onChange={handleInputChange}
+                required
+              />
+
             </div>
 
-            <label className="input-label">Total Shares</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="totalShares"
-              placeholder="50000" 
+              placeholder="Total Shares"
               className="input-field"
               value={formData.totalShares}
-              readOnly 
-              style={{ backgroundColor: '#f9f9f9' }}
+              readOnly
             />
 
-            <label className="input-label">Upload Document</label>
-            <div className="file-upload-box">
-              <input 
-                type="file" 
-                id="file-upload-input"
-                className="file-input-hidden"
-                onChange={handleFileChange}
-              />
-              <label htmlFor="file-upload-input" className="file-upload-label">
-                <svg className="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <span className="file-upload-text">
-                  {formData.document ? formData.document.name : 'Upload a file or drag and drop'}
-                </span>
-                <span className="file-upload-subtext">PDF, DOCX up to 10MB</span>
-              </label>
-            </div>
-            
-            {message && <p className={`message ${message.includes('success') ? 'main-success' : 'main-error'}`}>{message}</p>}
+            <input
+              type="file"
+              id="file-upload-input"
+              onChange={handleFileChange}
+            />
 
-            <button 
-              type="submit" 
+            {message && (
+              <p className={message.includes("success") ? "main-success" : "main-error"}>
+                {message}
+              </p>
+            )}
+
+            <button
+              type="submit"
               className="btn btn-submit"
-              disabled={isSubmitting || showSuccessAnimation} // Disable button during submission and animation
+              disabled={isSubmitting}
             >
-              {isSubmitting ? 'Processing...' : 'Submit IPO Application'}
+              {isSubmitting ? "Processing..." : "Submit IPO"}
             </button>
+
           </form>
+
         </section>
 
-        {/* Right Panel: Application Status Table */}
+        {/* RIGHT TABLE PANEL */}
         <section className="table-card">
+
           <h2 className="section-title">My IPO Applications</h2>
-          
+
           <div className="applications-table">
-            <div className="table-header">
-              <div className="col col-company">Company Name</div>
-              <div className="col col-status">Status</div>
-              <div className="col col-date">Submitted Date</div>
-            </div>
-            
+
             {IPOApplications.map((app, index) => (
               <div key={index} className="table-row">
-                <div className="col col-company">{app.company}</div>
-                <div className="col col-status">
-                  <span className="status-badge" style={{
-                    backgroundColor: statusColors[app.status].background,
-                    color: statusColors[app.status].color,
-                    border: `1px solid ${statusColors[app.status].border}`
-                  }}>
+
+                <div>{app.company}</div>
+
+                <div>
+                  <span
+                    className="status-badge"
+                    style={{
+                      backgroundColor: statusColors[app.status].background,
+                      color: statusColors[app.status].color,
+                      border: `1px solid ${statusColors[app.status].border}`,
+                    }}
+                  >
                     {app.status}
                   </span>
                 </div>
-                <div className="col col-date">{app.date}</div>
+
+                <div>{app.date}</div>
+
               </div>
             ))}
-            
-            {/* Placeholder for no data */}
-            {IPOApplications.length === 0 && (
-              <div className="no-data">No applications submitted yet.</div>
-            )}
+
           </div>
+
         </section>
+
       </main>
+
     </div>
   );
 };
 
+export default HomePage;
 
-// =================================================================
-// 4. MAIN APPLICATION ROUTER COMPONENT
-// =================================================================
+// import React, { useState } from "react";
+// import "../Style/HomePageStyle.css";
+// import "../Style/AnimationStyle.css";
 
-const App = () => {
-  // Use a state variable to simulate routing: true for main page, false for login page
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+// // Static IPO Data (later connect DB)
+// const IPOApplications = [
+//   { company: "Acme Corp", status: "Pending", date: "2023-08-15", price: 20 },
+//   { company: "Beta Industries", status: "Approved", date: "2023-07-20", price: 35 },
+//   { company: "Gamma Solutions", status: "Live", date: "2023-06-05", price: 42 },
+// ];
 
-  // Function to set the user as logged in (navigates to Main Page)
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
-  };
+// const HomePage = () => {
 
-  // Function to handle logout (navigates back to Login Page)
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-  };
+//   const [search, setSearch] = useState("");
+//   const [showBell, setShowBell] = useState(false);
+//   const [showProfile, setShowProfile] = useState(false);
+//   const [selectedIPO, setSelectedIPO] = useState(null);
 
-  return (
-    <>
-      <style jsx="true">{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        
-        /* Apply global font and background for the entire application */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            margin: 0;
-            padding: 0;
-        }
-      `}</style>
-      
-    
-        <MainPage onLogout={handleLogout} />
-      
-    </>
-  );
-};
+//   // LOGOUT
+//   const handleLogout = () => {
+//     localStorage.clear();
+//     window.location.href = "/";
+//   };
 
-export default App;
+//   // SEARCH FILTER
+//   const filteredIPO = IPOApplications.filter(item =>
+//     item.company.toLowerCase().includes(search.toLowerCase())
+//   );
+
+//   return (
+//     <div className="main-app-container">
+
+//       {/* HEADER */}
+//       <header className="header">
+
+//         <div className="logo-section">
+//           <span className="app-title">IPO Tracker</span>
+//         </div>
+
+//         <div className="icon-group">
+
+//           <input
+//             className="search-input"
+//             placeholder="Search IPO..."
+//             value={search}
+//             onChange={(e) => setSearch(e.target.value)}
+//           />
+
+//           <span className="icon-btn" onClick={() => setShowBell(!showBell)}>🔔</span>
+//           <span className="icon-btn" onClick={() => setShowProfile(!showProfile)}>👤</span>
+
+//           <button className="btn-logout" onClick={handleLogout}>
+//             Logout
+//           </button>
+
+//         </div>
+
+//       </header>
+
+//       {/* NOTIFICATION */}
+//       {showBell && (
+//         <div className="dropdown-box">
+//           <p>New IPO Added</p>
+//           <p>IPO Approved</p>
+//           <p>Market Update</p>
+//         </div>
+//       )}
+
+//       {/* PROFILE */}
+//       {showProfile && (
+//         <div className="dropdown-box">
+//           <p>My Profile</p>
+//           <p onClick={handleLogout}>Logout</p>
+//         </div>
+//       )}
+
+//       {/* MAIN CONTENT */}
+//       <main className="main-content-area">
+
+//         {/* RIGHT TABLE PANEL */}
+//         <section className="table-card">
+
+//           <h2 className="section-title">My IPO Applications</h2>
+
+//           <div className="applications-table">
+
+//             <div className="table-header">
+//               <div>Company Name</div>
+//               <div>Status</div>
+//               <div>Date</div>
+//             </div>
+
+//             {filteredIPO.map((app, index) => (
+
+//               <div
+//                 key={index}
+//                 className="table-row clickable-row"
+//                 onClick={() => setSelectedIPO(app)}
+//               >
+
+//                 <div>{app.company}</div>
+//                 <div>{app.status}</div>
+//                 <div>{app.date}</div>
+
+//               </div>
+
+//             ))}
+
+//           </div>
+
+//         </section>
+
+//       </main>
+
+//       {/* MODAL POPUP */}
+//       {selectedIPO && (
+
+//         <div className="modal-bg" onClick={() => setSelectedIPO(null)}>
+
+//           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+
+//             <h3>{selectedIPO.company}</h3>
+//             <p>Status: {selectedIPO.status}</p>
+//             <p>IPO Price: ${selectedIPO.price}</p>
+//             <p>Date: {selectedIPO.date}</p>
+
+//             <button onClick={() => setSelectedIPO(null)}>Close</button>
+
+//           </div>
+
+//         </div>
+
+//       )}
+
+//     </div>
+//   );
+// };
+
+// export default HomePage;

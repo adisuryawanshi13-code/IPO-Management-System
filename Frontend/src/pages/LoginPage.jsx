@@ -1,134 +1,136 @@
-import React, { useState } from 'react';
-import '../Style/loginPageStyle.css';
-
-const withRetry = async (fn, retries = 3) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (i === retries - 1) throw error;
-      const delay = Math.pow(2, i) * 1000;
-      console.warn(`Attempt ${i + 1} failed. Retrying in ${delay / 1000}s...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-};
+import React, { useState } from "react";
+import "../Style/loginPageStyle.css";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
 
-  // --- Handle Login ---
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  // ---------- REGISTER ----------
+  const handleRegister = async () => {
 
     if (!email || !password) {
-      setMessage('Please enter both email and password.');
+      setMessage("Enter email and password");
       return;
     }
 
-    setLoading(true);
-    setMessage('');
-
     try {
-      // API Call with retry logic
-      const apiCall = () => fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ email, password }),
       });
 
-      const response = await withRetry(apiCall);
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage(data.message || 'Login failed. Please try again.');
-      } else {
-        // Store JWT and user info
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-
-        setMessage('Login successful! Redirecting...');
-        
-        // Redirect to Homepage.jsx
-        setTimeout(() => {
-          window.location.href = '/mainpage';
-        }, 1000);
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
       }
 
-    } catch (error) {
-      console.error('Login error:', error);
-      setMessage('Login failed. Please check your credentials.');
-    } finally {
-      setLoading(false);
+      console.log("REGISTER RESPONSE:", res.status, data);
+
+      if (res.ok) {
+        setMessage("Registration Successful! Now Login.");
+      } else {
+        setMessage(data.message || "User already exists");
+      }
+
+    } catch (err) {
+      console.error(err);
+      setMessage("Backend not responding");
     }
   };
 
-  // --- Handle Register (placeholder) ---
-  const handleRegister = async () => {
-    setMessage('Redirecting to Registration Page...');
-    await new Promise(resolve => setTimeout(resolve, 800)); 
-    setMessage('Registration is not implemented in this demo.');
+  // ---------- LOGIN ----------
+  const handleLogin = async () => {
+
+    if (!email || !password) {
+      setMessage("Enter email and password");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
+
+      console.log("LOGIN RESPONSE:", res.status, data);
+
+      if (res.ok) {
+
+        localStorage.setItem("token", data.token);
+
+        setMessage("Login Successful!");
+
+        navigate("/dashboard");
+
+      } else {
+        setMessage(data.message || "Invalid credentials");
+      }
+
+    } catch (err) {
+      console.error(err);
+      setMessage("Backend not responding");
+    }
   };
 
-  // --- UI Rendering ---
   return (
-    <div className="app-container">
-      <div className="auth-card">
-        
-        {/* Left Side: Login Form */}
-        <div className="login-panel">
-          <div className="welcome-text">
-            <h1 className="title">Welcome <br/> to IPO Portal</h1>
-            <p className="subtitle">Sign in to your account</p>
-          </div>
-          
-          <form onSubmit={handleLogin} className="form-group">
-            <input 
-              type="email" 
-              placeholder="Email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-              required
-            />
-            <input 
-              type="password" 
-              placeholder="Password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-field"
-              required
-            />
-            
-            <button 
-              type="button" 
-              onClick={handleLogin}
-              className="btn btn-secondary">
-              Register
-            </button>
-          </form>
+  <div className="login-container">
 
-          {message && (
-            <p className={`message ${message.includes('successful') ? 'success' : 'error'}`}>
-              {message}
-            </p>
-          )}
-        </div>
-        
-        {/* Right Side: Graphic/Visual */}
-        <div className="graphic-panel">
-          <svg className="growth-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-            <polyline points="17 6 23 6 23 12"></polyline>
-          </svg>
-        </div>
+    <div className="login-card">
 
-      </div>
+      <h2 className="login-title">IPO Management Portal</h2>
+      <p className="login-subtitle">Login or Create Account</p>
+
+      <input
+        type="email"
+        placeholder="Enter Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="login-input"
+      />
+
+      <input
+        type="password"
+        placeholder="Enter Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="login-input"
+      />
+
+      <button onClick={handleLogin} className="login-btn primary">
+        Login
+      </button>
+
+      <button onClick={handleRegister} className="login-btn secondary">
+        Register
+      </button>
+
+      {message && <p className="login-message">{message}</p>}
+
     </div>
-  );
+
+  </div>
+);
+
 };
 
 export default LoginPage;
